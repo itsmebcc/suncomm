@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signal Monitoring</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+</head>
+
+<body>
+
+    <h1>Signal Monitoring</h1>
+
+    <button onclick="toggleDataset('RSRP')">Toggle RSRP</button>
+    <button onclick="toggleDataset('RSRQ')">Toggle RSRQ</button>
+    <button onclick="toggleDataset('SINR')">Toggle SINR</button>
+
+    <h2>5G Signal Strength</h2>
+    <canvas id="nr5gChart" width="400" height="200"></canvas>
+
+    <h2>LTE Signal Strength</h2>
+    <canvas id="lteChart" width="400" height="200"></canvas>
+
+    <script>
+        let nr5gChartContext = document.getElementById('nr5gChart').getContext('2d');
+        let lteChartContext = document.getElementById('lteChart').getContext('2d');
+
+        let nr5gChartData = {
+            labels: [],
+            datasets: [
+                { label: 'RSRP', data: [], borderColor: 'red', borderWidth: 1 },
+                { label: 'RSRQ', data: [], borderColor: 'blue', borderWidth: 1 },
+                { label: 'SINR', data: [], borderColor: 'green', borderWidth: 1 }
+            ]
+        };
+
+        let lteChartData = {
+            labels: [],
+            datasets: [
+                { label: 'RSRP', data: [], borderColor: 'red', borderWidth: 1 },
+                { label: 'RSRQ', data: [], borderColor: 'blue', borderWidth: 1 },
+                { label: 'SINR', data: [], borderColor: 'green', borderWidth: 1 }
+            ]
+        };
+
+        let chartOptions = {
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'second'
+                    }
+                },
+                y: {
+                    ticks: {
+                        stepSize: 10,
+                        beginAtZero: false,
+                        max: 0,
+                        min: -140
+                    }
+                }
+            },
+            tooltips: {
+                callbacks: {
+                    title: function (tooltipItem, data) {
+                        return 'Time: ' + data.labels[tooltipItem[0].index];
+                    },
+                    label: function (tooltipItem, data) {
+                        return data.datasets[tooltipItem.datasetIndex].label + ': ' + tooltipItem.yLabel + ' dBm/dB';
+                    }
+                }
+            },
+            plugins: {
+                zoom: {
+                    pan: {
+                        enabled: true,
+                        mode: 'x'
+                    },
+                    zoom: {
+                        wheel: {
+                            enabled: true,
+                        },
+                        pinch: {
+                            enabled: true
+                        },
+                        mode: 'x'
+                    }
+                }
+            }
+        };
+
+        let nr5gChart = new Chart(nr5gChartContext, {
+            type: 'line',
+            data: nr5gChartData,
+            options: chartOptions
+        });
+
+        let lteChart = new Chart(lteChartContext, {
+            type: 'line',
+            data: lteChartData,
+            options: chartOptions
+        });
+
+        function fetchData() {
+            fetch('/data')
+                .then(response => response.json())
+                .then(data => {
+                    let currentTime = moment().toISOString();
+
+                    nr5gChartData.labels.push(currentTime);
+                    nr5gChartData.datasets[0].data.push(data['5G'].rsrp);
+                    nr5gChartData.datasets[1].data.push(data['5G'].rsrq);
+                    nr5gChartData.datasets[2].data.push(data['5G'].sinr);
+
+                    lteChartData.labels.push(currentTime);
+                    lteChartData.datasets[0].data.push(data.LTE.rsrp);
+                    lteChartData.datasets[1].data.push(data.LTE.rsrq);
+                    lteChartData.datasets[2].data.push(data.LTE.sinr);
+
+                    nr5gChart.update();
+                    lteChart.update();
+                });
+        }
+
+        setInterval(fetchData, 30000);  // Fetch every 30 seconds
+
+        function toggleDataset(metric) {
+            switch (metric) {
+                case 'RSRP':
+                    nr5gChartData.datasets[0].hidden = !nr5gChartData.datasets[0].hidden;
+                    lteChartData.datasets[0].hidden = !lteChartData.datasets[0].hidden;
+                    break;
+                case 'RSRQ':
+                    nr5gChartData.datasets[1].hidden = !nr5gChartData.datasets[1].hidden;
+                    lteChartData.datasets[1].hidden = !lteChartData.datasets[1].hidden;
+                    break;
+                case 'SINR':
+                    nr5gChartData.datasets[2].hidden = !nr5gChartData.datasets[2].hidden;
+                    lteChartData.datasets[2].hidden = !lteChartData.datasets[2].hidden;
+                    break;
+            }
+
+            nr5gChart.update();
+            lteChart.update();
+        }
+
+    </script>
+
+</body>
+
+</html>

@@ -1,4 +1,5 @@
 SunComm Signal Fetcher
+I created this to help aim the antennas. 
 This repository contains a Flask application designed to fetch signal data from a device, given the proper credentials.
 
 These modems go by several different names. Chester Cheetah is one of them. This uses standard AT+ commands as well as the admin @192.168.100.1 to pull signal data.

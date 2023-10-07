@@ -40,18 +40,22 @@ When prompted, enter the web admin password.
 Open a web browser and navigate to:
 
 http://localhost:5000/
+![image](https://github.com/itsmebcc/suncomm/assets/81497332/bef1f1e1-49f7-4628-9169-74d640c32c6a)
+
+
 To retrieve the signal data, visit:
 
 http://localhost:5000/data
+![image](https://github.com/itsmebcc/suncomm/assets/81497332/d2f3d702-6195-4372-864c-5f46133dd6c6)
+
 
 5. Shutting Down
 To stop the Flask server, simply go back to your terminal and press CTRL+C.
 
 Afterwards, you can deactivate your virtual environment:
 
-bash
-Copy code
 deactivate
+
 Issues & Contributions
 For issues, please use the GitHub issues section. If you'd like to contribute to the project, feel free to fork the repository and submit a pull request!
 

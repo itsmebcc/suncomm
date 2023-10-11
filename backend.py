@@ -2,6 +2,7 @@ from flask import Flask, jsonify, render_template
 import requests
 import base64
 from getpass import getpass
+import time  # <-- Added for timing
 
 app = Flask(__name__)
 
@@ -19,7 +20,18 @@ HEADERS = {
 PASSWORD = getpass("Enter your password: ")
 ENCODED_PASSWORD = base64.b64encode(PASSWORD.encode()).decode()
 
+sid = None
+DEBUG_MODE = True
+
 def login():
+    global sid
+    if sid:
+        if DEBUG_MODE:
+            print("[DEBUG] Using existing SID:", sid)
+        return sid
+    
+    if DEBUG_MODE:
+        print("[DEBUG] Logging in to retrieve a new SID...")
     payload = {
         "version": "1.0",
         "sid": "00000000000000000000000000000000",
@@ -32,7 +44,8 @@ def login():
     }
     response = requests.post(BASE_URL, headers=HEADERS, json=payload)
     data = response.json()
-    return data.get('result', {}).get('sid')
+    sid = data.get('result', {}).get('sid')
+    return sid
 
 @app.route('/')
 def index():
@@ -40,13 +53,15 @@ def index():
 
 @app.route('/data', methods=['GET'])
 def get_signal_data():
-    sid = login()
-    if not sid:
+    start_time = time.time()  # <-- Record start time
+    
+    sid_value = login()
+    if not sid_value:
         return jsonify({"error": "Failed to log in."}), 500
 
     data = {
         "version": "1.0",
-        "sid": sid,
+        "sid": sid_value,
         "mid": 0,
         "module": "lte",
         "api": "at_cmd",
@@ -67,6 +82,11 @@ def get_signal_data():
             lte_data = line.split(",")
         if "\"NR5G-NSA\"," in line:
             nr5g_data = line.split(",")
+
+    # Calculate and print the elapsed time
+    elapsed_time = time.time() - start_time
+    if DEBUG_MODE:
+        print(f"[DEBUG] Request took {elapsed_time:.4f} seconds")
 
     return jsonify({
         "LTE": {

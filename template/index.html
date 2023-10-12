@@ -28,6 +28,7 @@
     <script>
         let nr5gChartContext = document.getElementById('nr5gChart').getContext('2d');
         let lteChartContext = document.getElementById('lteChart').getContext('2d');
+        let dataCounter = 0; // Initialize the counter
 
         let nr5gChartData = {
             labels: [],
@@ -50,9 +51,13 @@
         let chartOptions = {
             scales: {
                 x: {
-                    type: 'time',
-                    time: {
-                        unit: 'second'
+                    type: 'linear',
+                    title: {
+                        display: true,
+                        text: 'Data Point'
+                    },
+                    ticks: {
+                        precision: 0 // Ensure whole numbers
                     }
                 },
                 y: {
@@ -67,7 +72,7 @@
             tooltips: {
                 callbacks: {
                     title: function (tooltipItem, data) {
-                        return 'Time: ' + data.labels[tooltipItem[0].index];
+                        return 'Data Point: ' + data.labels[tooltipItem[0].index];
                     },
                     label: function (tooltipItem, data) {
                         return data.datasets[tooltipItem.datasetIndex].label + ': ' + tooltipItem.yLabel + ' dBm/dB';
@@ -109,14 +114,14 @@
             fetch('/data')
                 .then(response => response.json())
                 .then(data => {
-                    let currentTime = moment().toISOString();
+                    dataCounter += 1; // Increment the counter
 
-                    nr5gChartData.labels.push(currentTime);
+                    nr5gChartData.labels.push(dataCounter);
                     nr5gChartData.datasets[0].data.push(data['5G'].rsrp);
                     nr5gChartData.datasets[1].data.push(data['5G'].rsrq);
                     nr5gChartData.datasets[2].data.push(data['5G'].sinr);
 
-                    lteChartData.labels.push(currentTime);
+                    lteChartData.labels.push(dataCounter);
                     lteChartData.datasets[0].data.push(data.LTE.rsrp);
                     lteChartData.datasets[1].data.push(data.LTE.rsrq);
                     lteChartData.datasets[2].data.push(data.LTE.sinr);
@@ -126,7 +131,7 @@
                 });
         }
 
-        setInterval(fetchData, 30000);  // Fetch every 30 seconds
+        setInterval(fetchData, 5000);  // Fetch every 5 seconds
 
         function toggleDataset(metric) {
             switch (metric) {
